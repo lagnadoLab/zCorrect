@@ -3,37 +3,50 @@
 #include "Sarfia"
 #include "LoadScanImage"
 
-// check line 212 for save line
+// This batch script will cycle through a number of folders containing raw data from ScanImage and automatically create a registered and cropped average reference stack and time series. 
+// It then uses these to estimate displacements in z, and saves the experiment using the name of each time series file. 
+// INPUT PARAMETERS : 	numVols = the number of volumes collected for construction of the average reference stack
+//							ImPlane = the approximate frame number within the acquired volume that the time series most closely matches; usually the central plane i.e. floor(number of slices / 2)
+//							nFolders = OPTIONAL parameter specifying number of folders defined as string variables called path1...n
 
-function zCorrectMaster_Batch(numVols,ImPlane)
+function zCorrectMaster_Batch(numVols,ImPlane,[nFolders])
 
-	variable numvols, ImPlane
-
+	variable numvols, ImPlane, nFolders
 	
-	//	string path1="C:Data:xCorrect:VIP_Boutons:2018.10.30 Gumersindo:Stim"
-	string path1="C:\\Data\\xCorrect\\VIP_Boutons\\2018.12.04 Herminio\\missed"
-//	string path2="C:Data:xCorrect:VIP_Boutons:2018.12.04 Herminio"
-	
+	string path1="C:\Users\Leon Lagnado\Documents\TestData"
+// String variable with full path to directory containing raw ScanImage files. Can add more paths here called path2, path3 etc, but ensure you specifiy how many paths there are in the input parameter -  nFolders
+//	string path2=
+			
 	string S_path
 	variable FolderNum
+	 	
+	if(paramisdefault(nFolders))										//	Check if multiple folders
+	nFolders=1
+	endif
 	
-	FOR(FolderNum=0;FolderNum<1;FolderNum+=1)
+	variable chkPath=strlen(path1)
+	
+	if(chkPath==0)
+	getfilefolderinfo/D													//Open a dialogue choose the folder to process if no path is specified
+	path1=S_path
+	endif
+		
+	FOR(FolderNum=0;FolderNum<nFolders;FolderNum+=1)				// cycle through the number of folders
 		switch(FolderNum)
 			case 0:
 				S_path=path1
 				break
 			case 1:				
-			//	S_path=path2
+				//			S_path=path2
 				break
 			case 2:
 				//			S_path=path3
 				break
 			case 3:
-				//		S_path=path4
+				//			S_path=path4
 				break
 		endswitch
 	
-		//getfilefolderinfo/D													//Open a dialogue choose the folder to process
 		newpath/O pathstr, S_path			
 		string filelist= indexedfile(pathstr,-1,".Tif")	
 		filelist=SortList(filelist, ";", 16)				  	  	//Create a list of all the .tif files in the folder. -1 parameter addresses all files.
@@ -70,13 +83,6 @@ function zCorrectMaster_Batch(numVols,ImPlane)
 			string zc3=zwaveN+"_ch3"
 			RnChannels =  nChannelsFromHeader(firstrecpic)
 		
-			////// for testing
-			
-			//duplicate/FREE/o/r=[][][0,199] $waveN temp
-			//killwaves $waveN
-			//		duplicate/o temp $waveN
-			///////
-	
 			print "Splitting channels of recording"
 
 			SplitChannels($waveN,RnChannels) 
@@ -201,15 +207,20 @@ function zCorrectMaster_Batch(numVols,ImPlane)
 			copyscaling(CroppedRefCh1, $RefStackOutName_Ch1)
 			copyscaling(CroppedRefCh2, $RefStackOutName_Ch2)
 			
+			
+			// tidy waves
+			wave M_regMaskOut,xwave,absshiftY,absshiftX,shiftXY,VolumeStDevCh2_Plreg,VolumeStDevCh1_Plreg, tempsubA, tempSubB,VolumeStDevCh2,VolumeStDevCh1
+			killwaves M_regOut,M_regMaskOut,pwaveref,M_stdvImage,zesttomean,xwave,absshiftY,absshiftX,shiftXY,VolumeStDevCh2_Plreg,VolumeStDevCh1_Plreg, tempsubA, tempSubB,VolumeStDevCh2,VolumeStDevCh1
+			
 			// now save the experiment		
 			string saveName=WaveN+".pxp"
 			message="Saving experiment as "+saveName
-			//print message
-			//saveExperiment/P=pathstr as saveName
+			print message
+			saveExperiment/P=pathstr as saveName
 			print "done"
-			
-			//print "Killing all waves before we move on to the next file" 
-			//killAllWaves()
+			print "Killing all waves before we move on to the next file" 
+			killAllWaves()
+			KillVariables/A/Z
 			
 		endfor
 	ENDFOR

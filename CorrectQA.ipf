@@ -450,7 +450,8 @@ function CoQAMoff(shifts,zProfiles,QA,xwave,startZ,numSlices,numRois,reclength,s
 		// First check the fit using chi2 values
 		variable fitMax=wavemax(fit_w_norm)
 		variable chi2thresh=.6 // .6 estimated by eye from the distribution of chi2 values in a typical experiment. This distribution is usually gaussian, with a mean of c.0.15, and SD of 0.1
-		variable crit= V_chisq/fitMax	// chi square is sensitive to the scale of the fits, which are not neccessarily the same. Here I normalise by the maximum value in the fit. Since the fit's baseline is fixed at zero, this represents the full range of the values in the fit. Not sure if this is "right", but it seems to work
+		variable crit= V_chisq/fitMax	// chi square is sensitive to the scale of the fits, which are not neccessarily the same. Here I normalise by the maximum value in the fit. Since the fit's 
+		// baseline is fixed at zero, this represents the full range of the values in the fit. Not sure if this is "right", but it seems to have the desired effect. 
 		
 		///////////////////////////////////////////////////////////////////////////////////////////////////
 		if(crit>chi2thresh) 
@@ -545,9 +546,6 @@ function CoQAMoff(shifts,zProfiles,QA,xwave,startZ,numSlices,numRois,reclength,s
 			LevelUpperW=V_levelX
 		endif
 
-		
-	
-
 		// if the shifts do not fall within the levelRange, exclude...
 		//variable HighShift=wavemax(shifts)
 		//variable LowShift=wavemin(shifts)
@@ -570,7 +568,7 @@ function CoQAMoff(shifts,zProfiles,QA,xwave,startZ,numSlices,numRois,reclength,s
 	// Compute divisor trace
 	valFromCoeffs(zFitNormCoeffs,shifts)  
 	wave DivTrace
-	duplicate/o DivTrace subtrace
+	
 	
 	
 	// check that division factor never falls below 0.1
@@ -586,43 +584,44 @@ function CoQAMoff(shifts,zProfiles,QA,xwave,startZ,numSlices,numRois,reclength,s
 	
 	
 	// create subtrace from DivTrace ; scaled to starting fluorescence
-	for(i=0;i<numRois;i+=1)
-		duplicate/o/r=[][i] subtrace SubTracetemp
-		redimension/n=(-1) SubTracetemp
+	//duplicate/o DivTrace subtrace
+	//for(i=0;i<numRois;i+=1)
+	//	duplicate/o/r=[][i] subtrace SubTracetemp
+	//	redimension/n=(-1) SubTracetemp
+	//	
+	//	duplicate/free/o/r=[][i] QA QAtemp
+	//	redimension/n=(-1) QAtemp
+	//	setscale/p x,0,1,QAtemp
+	//	variable startF=mean(QAtemp,0,14) // find the starting fluorescence for this ROI (baseline)
 		
-		duplicate/free/o/r=[][i] QA QAtemp
-		redimension/n=(-1) QAtemp
-		setscale/p x,0,1,QAtemp
-		variable startF=mean(QAtemp,0,14) // find the starting fluorescence for this ROI (baseline)
-		
-		SubTracetemp*=startF
-		subtrace[][i]=SubTracetemp[p]
-	endfor
+	//	SubTracetemp*=startF
+	//	subtrace[][i]=SubTracetemp[p]
+	//endfor
 	
 	// Correct through subtraction
-	MatrixOP/o All_CorrectedQA_SubMoff=QA-SubTrace
+	//MatrixOP/o All_CorrectedQA_SubMoff=QA-SubTrace
 	
 	// If no axial motion has occured then subtraction will bring the trace to zero. Add starting fluorescence back here
-	for(i=0;i<numRois;i+=1)
+	//for(i=0;i<numRois;i+=1)
 	
-		duplicate/free/o/r=[][i] All_CorrectedQA_SubMoff tempSub
-		redimension/n=(-1)  tempSub
+	//	duplicate/free/o/r=[][i] All_CorrectedQA_SubMoff tempSub
+	//	redimension/n=(-1)  tempSub
 		
-		duplicate/free/o/r=[][i] QA QAtemp
-		redimension/n=(-1) QAtemp
-		setscale/p x,0,1,QAtemp
-		startF=mean(QAtemp,0,14) // find the starting fluorescence for this ROI (baseline)
+	//	duplicate/free/o/r=[][i] QA QAtemp
+	//	redimension/n=(-1) QAtemp
+	//	setscale/p x,0,1,QAtemp
+	//	startF=mean(QAtemp,0,14) // find the starting fluorescence for this ROI (baseline)
 		
-		tempSub+=startF
-		All_CorrectedQA_SubMoff[][i]=tempSub[p]
-	endfor
+	//	tempSub+=startF
+	//	All_CorrectedQA_SubMoff[][i]=tempSub[p]
+	//endfor
 
 	// Divide the raw trace by the divisor trace to correct
 	MatrixOP/o All_CorrectedQA_DivMoff=QA/DivTrace
 	
 	// Rescale both corrected QA waves
 	copyscaling(QA,All_CorrectedQA_DivMoff)
-	copyscaling(QA,All_CorrectedQA_SubMoff)
+	//copyscaling(QA,All_CorrectedQA_SubMoff)
 	
 	////////////////////////////////// Exclusion ////////////////////////////////////////////////////
 	/////////////////////////////////////////////////////////////////////////////////////////////////
@@ -653,8 +652,8 @@ function CoQAMoff(shifts,zProfiles,QA,xwave,startZ,numSlices,numRois,reclength,s
 			duplicate/free/o/r=[][i] All_CorrectedQA_DivMoff CorrectedQA_DivMoffTemp
 			redimension/n=(-1) CorrectedQA_DivMoffTemp
 
-			duplicate/free/o/r=[][i] All_CorrectedQA_SubMoff CorrectedQA_SubMoffTemp
-			redimension/n=(-1) CorrectedQA_SubMoffTemp
+		//	duplicate/free/o/r=[][i] All_CorrectedQA_SubMoff CorrectedQA_SubMoffTemp
+		//	redimension/n=(-1) CorrectedQA_SubMoffTemp
 			
 			duplicate/o/free/r=[][i] QA temp
 			redimension/n=(-1) temp
@@ -669,7 +668,7 @@ function CoQAMoff(shifts,zProfiles,QA,xwave,startZ,numSlices,numRois,reclength,s
 			zMoffatFitCorrected[][count]	= tempCorrZFit[p]	
 			Pre_CorrectedQA[][count] = temp[p]
 			CorrectedQA_DivMoff[][count]=CorrectedQA_DivMoffTemp[p]
-			CorrectedQA_SubMoff[][count]=CorrectedQA_SubMoffTemp[p]
+		//	CorrectedQA_SubMoff[][count]=CorrectedQA_SubMoffTemp[p]
 			ROI_ID_Orig_Moff[count]=i
 			count+=1
 
@@ -690,18 +689,18 @@ Function radialMoffat(w,r) : FitFunc
 	//CurveFitDialog/ These comments were created by the Curve Fitting dialog. Altering them will
 	//CurveFitDialog/ make the function less convenient to work with in the Curve Fitting dialog.
 	//CurveFitDialog/ Equation:
-	//CurveFitDialog/ f(r) = I0 * (1+(R-r0)^2/THETA^2)^-beta
+	//CurveFitDialog/ f(r) = B + A * (1+(R-r0)^2/alpha^2)^-beta
 	//CurveFitDialog/ End of Equation
 	//CurveFitDialog/ Independent Variables 1
 	//CurveFitDialog/ r
 	//CurveFitDialog/ Coefficients 5
-	//CurveFitDialog/ w[0] = I0
-	//CurveFitDialog/ w[1] = theta
+	//CurveFitDialog/ w[0] = A
+	//CurveFitDialog/ w[1] = alpha
 	//CurveFitDialog/ w[2] = beta
 	//CurveFitDialog/ w[3] = r0
-	//CurveFitDialog/ w[4] = minimum (baseline)
+	//CurveFitDialog/ w[4] = B (baseline)
 
-	return (w[0] * (1+(R-w[3])^2/w[1]^2)^-w[2])+w[4]
+	return w[4]+(w[0] * (1+(R-w[3])^2/w[1]^2)^-w[2])
 End
 
 Window Graph0() : Graph
@@ -735,7 +734,7 @@ function fitMoffat(w)
 end
 
 // Thomas Ryan 28/01/19
-////////// Short function to find Y at a given X; vectorised for speed //////////
+////////// Short function to find Y at a given X using the equation //////////
 
 function valFromCoeffs(w,xW)
 	wave w, xW
@@ -788,12 +787,9 @@ function DFF0Trace(WName)
 	Make/o/n=100 Histo
 	Histogram /b=1 ROI, Histo	// Histogram it
 	wavestats /q/m=1 histo				// compute the wavestats... includes V_maxLoc -> the x location of the largest bin
-	//if(V_MaxLoc>0)
+	
 	variable F0 = V_MaxLoc
-	//	print F0
-	//else
-	//	F0 = 1
-	//endif
+	
 	DFF0w[]=(ROI[p] -F0)/ F0
 		
 	duplicate/o DFF0w $outName
