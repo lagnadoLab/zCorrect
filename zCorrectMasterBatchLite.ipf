@@ -209,8 +209,8 @@ function zCorrectMaster_Batch(numVols,ImPlane,[nFolders])
 			
 			
 			// tidy waves
-			wave M_regMaskOut,xwave,absshiftY,absshiftX,shiftXY,VolumeStDevCh2_Plreg,VolumeStDevCh1_Plreg, tempsubA, tempSubB,VolumeStDevCh2,VolumeStDevCh1
-			killwaves M_regOut,M_regMaskOut,pwaveref,M_stdvImage,zesttomean,xwave,absshiftY,absshiftX,shiftXY,VolumeStDevCh2_Plreg,VolumeStDevCh1_Plreg, tempsubA, tempSubB,VolumeStDevCh2,VolumeStDevCh1
+			wave M_regMaskOut,xwave,absshiftY,absshiftX,shiftXY,VolumeStDevCh2_Plreg,VolumeStDevCh1_Plreg, tempsubA, tempSubB,VolumeStDevCh2,VolumeStDevCh1,M_StdvImage,CroppedSDRefCh1,CroppedNegSD,CroppedPosSD,VolumeStDevCh1_Plreg_reg,VolumeNegSDCh1_reg,VolumePosSDCh1_reg,shiftx,shifty,VolumeNegSDCh2,VolumeNegSDCh1,VolumePosSDCh1,VolumeCh2_Plreg,VolumeCh1_Plreg,VolumeCh1,VolumeCh2
+			killwaves M_regOut,M_regMaskOut,pwaveref,M_stdvImage,zesttomean,xwave,absshiftY,absshiftX,shiftXY,VolumeStDevCh2_Plreg,VolumeStDevCh1_Plreg, tempsubA, tempSubB,VolumeStDevCh2,VolumeStDevCh1,M_StdvImage,CroppedSDRefCh1,CroppedNegSD,CroppedPosSD,VolumeStDevCh1_Plreg_reg,VolumeNegSDCh1_reg,VolumePosSDCh1_reg,shiftx,shifty,VolumeNegSDCh2,VolumeNegSDCh1,VolumePosSDCh1,VolumeCh2_Plreg,VolumeCh1_Plreg,VolumeCh1,VolumeCh2
 			
 			// now save the experiment		
 			string saveName=WaveN+".pxp"
