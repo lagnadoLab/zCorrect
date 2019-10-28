@@ -42,8 +42,8 @@
 function CorrectQA()
 
 	string shiftsName=wavelist("zestimate","","")
-	string zProfilesName=wavelist("CroppedRef_Ch1_reg_SD_QA","","")
-	string QAName=wavelist("CroppedCh1_SD_QA","","")
+	string zProfilesName=wavelist("CroppedRef_Ch1_reg_DFF0","","")
+	string QAName=wavelist("CroppedCh1_DFF0","","")
 	
 	wave shifts=$shiftsName, zProfiles=$zProfilesName, QA=$QAName
 	duplicate/o/free $shiftsName shifts
@@ -60,7 +60,7 @@ function CorrectQA()
 	
 	/////////////////////////////\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 		
-	// Set some useful variables to be used as global variables to pass to different procedures
+	// Find some useful variables to be used as global variables to pass to different procedures
 	variable/g numRois=dimsize(zProfiles,1)
 	variable/g numSlices=dimsize(zProfiles,0)
 	variable/g recLength=dimsize(shifts,0)
@@ -110,6 +110,20 @@ end
 // fluorescent changes we expect from axial displacement. Correction is performed using both divisive and 
 // subtractive  methods. These are stored in waves CorrectedQA_EmpDiv & CorrectedQA_EmpSub respectively. 
 // Plotted spline fits are stored in zFitCurves_Emp
+
+// Inputs:
+// shifts			-	wave		-	1D vector describing the shifts in the axial plane over time in microns
+// zProfiles		-	wave		-	2D wave containing the raw axial profiles (columns) of each ROI (rows)
+// QA				-	wave 		-	2D wave containing the fluorescent activity over time (columns) of each ROI (rows)
+//	xwave			-	wave		-	1D vector containing the x-scaling of profiles
+// startZ			-	variable	-	the axial position of the first slice of the zstack (changes depending on whether stack was taken from the bottom or top of the volume)
+//	numSlices		-	variable	-	the number of slices in the reference stack
+// numRois		-	variable	-	the number of ROIs
+//	recLength		-	variable	-	the length of the time series
+//	startPos		-	variable	-	the estimated starting axial position of the time series in microns
+
+//	Generates:
+// 
 
 function CoQAEmp(shifts,zProfiles,QA,xwave,startZ,numSlices,numRois,reclength,startPos)
 
@@ -177,7 +191,7 @@ function CoQAEmp(shifts,zProfiles,QA,xwave,startZ,numSlices,numRois,reclength,st
 		variable UpperThreshWidth=15
 		variable LowerThreshWidth=7
 		
-		// find levels at a half the maximum value of the synapse
+		// find levels at a half the maximum value of the synapse (FWHM)
 		
 		variable HalfMax=wavemax(tempZ_norm) // vaguely similar to 2*SD
 		HalfMax/=2
@@ -322,7 +336,22 @@ end
 
 // Summary - Fits a Moffat function to the zProfile of each ROI, normalised to the intensity at the starting plane
 // Reads off this fit at x=shifts for each time point to create a divisor trace
-// Corrects the activity traces by dividing each trace by this divisor trace  
+// Corrects the activity traces by dividing each trace by this divisor trace 
+ 
+// Inputs:
+// shifts			-	wave		-	1D vector describing the shifts in the axial plane over time in microns
+// zProfiles		-	wave		-	2D wave containing the raw axial profiles (columns) of each ROI (rows)
+// QA				-	wave 		-	2D wave containing the fluorescent activity over time (columns) of each ROI (rows)
+//	xwave			-	wave		-	1D vector containing the x-scaling of profiles
+// startZ			-	variable	-	the axial position of the first slice of the zstack (changes depending on whether stack was taken from the bottom or top of the volume)
+//	numSlices		-	variable	-	the number of slices in the reference stack
+// numRois		-	variable	-	the number of ROIs
+//	recLength		-	variable	-	the length of the time series
+//	startPos		-	variable	-	the estimated starting axial position of the time series in microns
+
+//	Generates:
+// 
+
 
 function CoQAMoff(shifts,zProfiles,QA,xwave,startZ,numSlices,numRois,reclength,startPos)
 
@@ -679,9 +708,8 @@ function CoQAMoff(shifts,zProfiles,QA,xwave,startZ,numSlices,numRois,reclength,s
 	
 end
 
+// Thomas Ryan 2019 Fitting wizard GUI and drop-down menu functionality for Moffat
 // edit TR - 07/02/19 - added 5th coefficient for baseline. change made in both the fitMoffat and the valsfromCoeff functions
-
-
 Function radialMoffat(w,r) : FitFunc
 	Wave w
 	Variable r
@@ -749,6 +777,11 @@ function valFromCoeffs(w,xW)
 	
 end
 
+
+//############# Utility Functions Thomas Ryan 2019###############\\
+
+// Utility function to create a locomotion trace from a rotary encoder recorded through a scanimage channel 
+// Can be scaled to convert Piezo monitor recorded through a scanimage channel with different input voltages 
 function LocTrace(WName)
 
 	string WName
@@ -775,6 +808,9 @@ function LocTrace(WName)
 	//PiTrace*=-0.647668 // Input range -20V, 20V
 	//PiTrace*=-0.198432 // Input range -10V, 10V 
 end
+
+// Utility function to compute deltaF over F - 
+//	WARNING - this is bare bones: operates on the mode as baseline, no correction for bleach or neuropil at this stage
 
 function DFF0Trace(WName)
 
